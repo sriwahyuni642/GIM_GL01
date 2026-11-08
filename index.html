@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master GLB & GLBB - Lab Fisika Interaktif SMAN 1 Pinrang</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        physics: {
+                            dark: '#0B132B',
+                            card: '#1C2541',
+                            accent: '#48CAE4',
+                            glow: '#00B4D8',
+                            gold: '#FFB703',
+                            success: '#06D6A0',
+                            danger: '#EF476F'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'Plus Jakarta Sans', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Styling for High Contrast and Smooth Touch Interactions */
+        body {
+            background-color: #070B19;
+            color: #F8FAFC;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            font-family: 'Outfit', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism background cards */
+        .glass-panel {
+            background: rgba(28, 37, 65, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Drag & Drop Visual State */
+        .draggable-item {
+            cursor: grab;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            touch-action: none;
+        }
+        
+        .draggable-item:active {
+            cursor: grabbing;
+            transform: scale(1.04) rotate(1deg);
+            z-index: 50;
+        }
+
+        .draggable-item.selected-tap {
+            border-color: #00B4D8 !important;
+            box-shadow: 0 0 20px rgba(0, 180, 216, 0.8) !important;
+            transform: scale(1.05);
+        }
+
+        .drop-zone {
+            transition: all 0.25s ease;
+        }
+
+        .drop-zone.drag-over {
+            background-color: rgba(72, 202, 228, 0.25) !important;
+            border-color: #00B4D8 !important;
+            transform: scale(1.01);
+            box-shadow: 0 0 25px rgba(0, 180, 216, 0.4);
+        }
+
+        /* Animations */
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(72, 202, 228, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(72, 202, 228, 0.8); }
+        }
+
+        .glow-effect {
+            animation: pulseGlow 3s infinite ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        .shake-animation {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes popSuccess {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .pop-animation {
+            animation: popSuccess 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Custom Scrollbar for Learning Material Modal */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B132B;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #00B4D8;
+            border-radius: 4px;
+        }
+
+        /* Touch target sizes optimization for smartboard */
+        .btn-touch {
+            min-height: 52px;
+            min-width: 52px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 sm:p-4 bg-gradient-to-br from-slate-950 via-physics-dark to-slate-900 text-slate-100">
+
+    <!-- CONTAINER UTAMA - Aspect Ratio 16:9 Desktop & Smartboard Adaptive -->
+    <div id="app-container" class="w-full max-w-7xl aspect-auto md:aspect-[16/9] min-h-[680px] flex flex-col justify-between glass-panel rounded-3xl p-4 sm:p-6 md:p-8 relative overflow-hidden shadow-2xl border border-cyan-500/20">
+
+        <!-- BACKGROUND DECORATION -->
+        <div class="absolute -top-32 -left-32 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- ================= HALAMAN 1: LOGIN / IDENTITAS ================= -->
+        <div id="screen-login" class="flex-1 flex flex-col items-center justify-center z-10 py-6">
+            <div class="text-center max-w-2xl mx-auto space-y-4">
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-400/30 text-cyan-300 font-semibold text-sm">
+                    <i class="fa-solid fa-atom fa-spin text-cyan-400"></i> Laboratorium Fisika Interaktif SMAN 1 Pinrang
+                </div>
+                
+                <h1 class="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-white leading-tight">
+                    MASTER <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">GLB & GLBB</span>
+                </h1>
+                <p class="text-slate-300 text-base sm:text-lg">
+                    Tantangan Interaktif Kinestetik Gerak Lurus Beraturan dan Gerak Lurus Berubah Beraturan (Fase E / Kelas 10)
+                </p>
+            </div>
+
+            <!-- Form Identitas -->
+            <div class="w-full max-w-md mt-8 glass-card rounded-2xl p-6 sm:p-8 border border-white/10 space-y-5 shadow-xl">
+                <div>
+                    <label class="block text-slate-200 text-sm font-bold mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-user-graduate text-cyan-400"></i> Nama Lengkap Siswa
+                    </label>
+                    <input type="text" id="input-student-name" placeholder="Masukkan nama lengkapmu..."
+                        class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition text-base">
+                </div>
+
+                <div>
+                    <label class="block text-slate-200 text-sm font-bold mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-id-badge text-cyan-400"></i> Kelas / Nomor Absen
+                    </label>
+                    <input type="text" id="input-student-class" placeholder="Contoh: X.1 / 14"
+                        class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition text-base">
+                </div>
+
+                <button onclick="submitLogin()" class="w-full btn-touch bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold text-lg py-4 rounded-xl shadow-lg shadow-cyan-500/30 transform active:scale-95 transition-all flex items-center justify-center gap-3">
+                    <span>MASUK KE GAME</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <!-- Footer pengembang -->
+            <p class="mt-8 text-xs sm:text-sm text-slate-400 text-center">
+                Dikembangkan oleh: <span class="text-cyan-300 font-semibold">Sriwahyuni</span> (Guru SMAN 1 Pinrang)
+            </p>
+        </div>
+
+        <!-- ================= HALAMAN 2: DASHBOARD MENU UTAMA ================= -->
+        <div id="screen-menu" class="hidden flex-1 flex flex-col justify-between z-10 py-4">
+            <!-- Header Greeting -->
+            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-3">
+                        <i class="fa-solid fa-rocket text-cyan-400"></i> Selamat Datang, <span id="display-player-name" class="text-cyan-300">Siswa</span>!
+                    </h2>
+                    <p class="text-sm text-slate-400 mt-1" id="display-player-class">Kelas X / Absen --</p>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <button onclick="toggleAudio()" id="btn-audio-toggle" class="btn-touch px-4 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-slate-200 hover:text-white hover:bg-slate-700 flex items-center gap-2 transition">
+                        <i class="fa-solid fa-volume-high text-cyan-400" id="icon-audio"></i>
+                        <span id="text-audio">Suara: ON</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Grid Navigation Buttons -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 my-6">
+                <!-- Button Start Game -->
+                <button onclick="startGame()" class="sm:col-span-2 lg:col-span-1 btn-touch group p-6 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-xl shadow-cyan-500/25 flex flex-col justify-between border border-cyan-300/30 transform hover:-translate-y-1 transition-all">
+                    <div class="flex items-center justify-between w-full">
+                        <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-2xl">
+                            <i class="fa-solid fa-play text-white"></i>
+                        </div>
+                        <span class="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-white/20">Tantangan Utama</span>
+                    </div>
+                    <div class="mt-8 text-left">
+                        <h3 class="text-2xl font-black">MULAI BERMAIN</h3>
+                        <p class="text-sm text-cyan-100 opacity-90 mt-1">Selesaikan 7 Ronde Drag & Drop Kinestetik!</p>
+                    </div>
+                </button>
+
+                <!-- Button Pendahuluan -->
+                <button onclick="openModal('modal-cp-tp')" class="btn-touch group p-6 rounded-2xl glass-card hover:bg-slate-800/80 border border-white/10 text-left flex flex-col justify-between transform hover:-translate-y-1 transition-all">
+                    <div class="w-12 h-12 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-bullseye"></i>
+                    </div>
+                    <div class="mt-6">
+                        <h3 class="text-xl font-bold text-white group-hover:text-cyan-300 transition">Pendahuluan & CP-TP</h3>
+                        <p class="text-xs text-slate-400 mt-1">Capaian & Tujuan Pembelajaran Fisika Fase E</p>
+                    </div>
+                </button>
+
+                <!-- Button Petunjuk -->
+                <button onclick="openModal('modal-petunjuk')" class="btn-touch group p-6 rounded-2xl glass-card hover:bg-slate-800/80 border border-white/10 text-left flex flex-col justify-between transform hover:-translate-y-1 transition-all">
+                    <div class="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-gamepad"></i>
+                    </div>
+                    <div class="mt-6">
+                        <h3 class="text-xl font-bold text-white group-hover:text-cyan-300 transition">Petunjuk Permainan</h3>
+                        <p class="text-xs text-slate-400 mt-1">Cara Bermain Drag & Drop di Layar Sentuh & Mouse</p>
+                    </div>
+                </button>
+
+                <!-- Button Materi -->
+                <button onclick="openModal('modal-materi')" class="btn-touch group p-6 rounded-2xl glass-card hover:bg-slate-800/80 border border-white/10 text-left flex flex-col justify-between transform hover:-translate-y-1 transition-all">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+                    <div class="mt-6">
+                        <h3 class="text-xl font-bold text-white group-hover:text-cyan-300 transition">Materi Pembelajaran</h3>
+                        <p class="text-xs text-slate-400 mt-1">Rangkuman Lengkap GLB vs GLBB, Grafik & Formula</p>
+                    </div>
+                </button>
+
+                <!-- Button Developer Info -->
+                <button onclick="openModal('modal-pengembang')" class="btn-touch group p-6 rounded-2xl glass-card hover:bg-slate-800/80 border border-white/10 text-left flex flex-col justify-between transform hover:-translate-y-1 transition-all">
+                    <div class="w-12 h-12 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-id-card"></i>
+                    </div>
+                    <div class="mt-6">
+                        <h3 class="text-xl font-bold text-white group-hover:text-cyan-300 transition">Info Pengembang</h3>
+                        <p class="text-xs text-slate-400 mt-1">Profil Penyusun Aplikasi & Sekolah</p>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Footer Menu -->
+            <div class="flex items-center justify-between text-xs text-slate-400 border-t border-white/10 pt-3">
+                <span>SMAN 1 Pinrang - Sulawesi Selatan</span>
+                <button onclick="logout()" class="text-rose-400 hover:text-rose-300 flex items-center gap-1 font-semibold">
+                    <i class="fa-solid fa-right-from-bracket"></i> Ganti Pemain
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= HALAMAN 3: GAME ARENA (TANTANGAN DRAG & DROP) ================= -->
+        <div id="screen-game" class="hidden flex-1 flex flex-col justify-between z-10">
+            <!-- HUD Header Status -->
+            <div class="bg-slate-900/90 rounded-2xl p-3 sm:p-4 border border-white/10 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+                <!-- Player Info -->
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-user-astronaut"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400">Pemain</p>
+                        <p id="hud-player-name" class="font-bold text-sm text-white">Siswa</p>
+                    </div>
+                </div>
+
+                <!-- Level & Progress Bar -->
+                <div class="flex-1 max-w-md px-2">
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-cyan-300 font-bold" id="hud-round-title">Ronde 1 / 7</span>
+                        <span class="text-slate-400" id="hud-progress-text">14% Selesai</span>
+                    </div>
+                    <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                        <div id="hud-progress-bar" class="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 transition-all duration-500 w-[14%]"></div>
+                    </div>
+                </div>
+
+                <!-- Live Score & Stars -->
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <p class="text-xs text-slate-400">Skor Live</p>
+                        <p id="hud-score" class="text-xl sm:text-2xl font-black text-amber-400">0</p>
+                    </div>
+                    <div class="flex gap-1 text-amber-400 text-base sm:text-lg" id="hud-stars">
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                    </div>
+                    <button onclick="confirmExitGame()" class="btn-touch p-2.5 rounded-xl bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-slate-700 transition" title="Keluar Game">
+                        <i class="fa-solid fa-house"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Challenge Area -->
+            <div id="game-arena-content" class="my-4 flex-1 flex flex-col justify-center">
+                <!-- Content generated dynamically via JavaScript for each level -->
+            </div>
+
+            <!-- Feedback Bar / Instruction Footnote -->
+            <div id="game-feedback" class="bg-slate-900/80 rounded-xl px-4 py-3 border border-white/10 flex items-center justify-between text-sm">
+                <div class="flex items-center gap-3" id="feedback-text-container">
+                    <i class="fa-solid fa-lightbulb text-amber-400 text-lg"></i>
+                    <span id="feedback-text" class="text-slate-200">Geser (drag) kartu atau Sentuh kartu lalu sentuh wadah tujuan yang sesuai.</span>
+                </div>
+                <button id="btn-next-round" onclick="nextRound()" class="hidden btn-touch px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold shadow-lg shadow-emerald-500/30 flex items-center gap-2 animate-bounce">
+                    <span>Lanjut Ronde berikutnya</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= HALAMAN 4: SELEBRASI KEMENANGAN / HASIL ================= -->
+        <div id="screen-result" class="hidden flex-1 flex flex-col items-center justify-center z-10 py-6 text-center">
+            <div class="glass-card rounded-3xl p-6 sm:p-10 max-w-2xl w-full border border-cyan-400/30 space-y-6 shadow-2xl relative">
+                <div class="w-24 h-24 mx-auto rounded-full bg-gradient-to-tr from-amber-400 to-yellow-200 flex items-center justify-center text-slate-950 text-5xl shadow-lg shadow-amber-500/30 pop-animation">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+
+                <div class="space-y-2">
+                    <h2 class="text-3xl sm:text-4xl font-black text-white">SELEBRASI KEMENANGAN!</h2>
+                    <p class="text-slate-300 text-sm sm:text-base">Selamat <span id="res-player-name" class="font-bold text-cyan-300">Siswa</span>, kamu telah menyelesaikan semua tantangan!</p>
+                </div>
+
+                <!-- Bintang dan Predikat -->
+                <div class="bg-slate-900/80 rounded-2xl p-6 border border-white/10 space-y-4">
+                    <div class="flex justify-center gap-3 text-3xl sm:text-4xl text-amber-400" id="res-stars-display">
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 pt-2">
+                        <div class="bg-slate-800/60 rounded-xl p-3 border border-slate-700">
+                            <p class="text-xs text-slate-400">Total Skor Akhir</p>
+                            <p id="res-final-score" class="text-3xl font-black text-cyan-400">100</p>
+                        </div>
+                        <div class="bg-slate-800/60 rounded-xl p-3 border border-slate-700">
+                            <p class="text-xs text-slate-400">Tingkat Penguasaan</p>
+                            <p id="res-badge-title" class="text-lg font-bold text-emerald-400 mt-1">Master Fisika</p>
+                        </div>
+                    </div>
+
+                    <p id="res-evaluation-text" class="text-xs sm:text-sm text-slate-300 italic pt-2">
+                        "Luar biasa! Pemahamanmu tentang konsep GLB (kecepatan konstan) dan GLBB (percepatan konstan) sangat presisi!"
+                    </p>
+                </div>
+
+                <!-- Navigasi Hasil -->
+                <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                    <button onclick="restartGame()" class="flex-1 btn-touch py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition">
+                        <i class="fa-solid fa-rotate-left"></i> Main Lagi
+                    </button>
+                    <button onclick="goToMenu()" class="flex-1 btn-touch py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold border border-slate-600 flex items-center justify-center gap-2 transition">
+                        <i class="fa-solid fa-list-ul"></i> Menu Utama
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= MODAL 1: PENDAHULUAN & CP-TP ================= -->
+        <div id="modal-cp-tp" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="glass-panel max-w-2xl w-full rounded-2xl p-6 border border-cyan-500/30 max-h-[90vh] overflow-y-auto space-y-6">
+                <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                    <h3 class="text-2xl font-bold text-white flex items-center gap-3">
+                        <i class="fa-solid fa-bullseye text-purple-400"></i> Pendahuluan & CP-TP
+                    </h3>
+                    <button onclick="closeModal('modal-cp-tp')" class="text-slate-400 hover:text-white text-xl p-2">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-4 text-sm text-slate-200">
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 space-y-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-purple-400">Capaian Pembelajaran (CP) - Fase E (Kelas 10)</span>
+                        <p class="font-medium text-slate-100">
+                            Peserta didik mampu menganalisis gerak dua dimensi dan gerak satu dimensi, meliputi Gerak Lurus Beraturan (GLB) dan Gerak Lurus Berubah Beraturan (GLBB) serta menerapkannya dalam menyelesaikan masalah kehidupan sehari-hari.
+                        </p>
+                    </div>
+
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 space-y-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-cyan-400">Tujuan Pembelajaran (TP)</span>
+                        <ul class="list-disc list-inside space-y-1 text-slate-300">
+                            <li>Membedakan karakteristik fisis GLB ($a = 0$) dan GLBB ($a = \text{konstan} \neq 0$).</li>
+                            <li>Menganalisis pola rekaman Ticker Timer dan tetesan oli pada kendaraan.</li>
+                            <li>Menganalisis bentuk grafik kinematika gerak ($v-t$, $s-t$, dan $a-t$).</li>
+                            <li>Menghubungkan besaran fisis (jarak, kecepatan, percepatan, dan waktu) dalam persamaan kinematika.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="text-right">
+                    <button onclick="closeModal('modal-cp-tp')" class="btn-touch px-6 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold">
+                        Paham & Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= MODAL 2: PETUNJUK PERMAINAN ================= -->
+        <div id="modal-petunjuk" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="glass-panel max-w-2xl w-full rounded-2xl p-6 border border-cyan-500/30 max-h-[90vh] overflow-y-auto space-y-6">
+                <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                    <h3 class="text-2xl font-bold text-white flex items-center gap-3">
+                        <i class="fa-solid fa-gamepad text-amber-400"></i> Petunjuk Permainan
+                    </h3>
+                    <button onclick="closeModal('modal-petunjuk')" class="text-slate-400 hover:text-white text-xl p-2">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 space-y-2">
+                        <div class="w-10 h-10 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-hand-pointer"></i>
+                        </div>
+                        <h4 class="font-bold text-white">Mode Layar Sentuh & Smartboard</h4>
+                        <p class="text-xs text-slate-300">
+                            Tersedia 2 cara: <strong>Tarik langsung (Drag)</strong> kartu ke wadah tujuan, ATAU <strong>Ketuk (Tap) kartu</strong> hingga menyala biru, lalu <strong>Ketuk wadah tujuan</strong>.
+                        </p>
+                    </div>
+
+                    <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 space-y-2">
+                        <div class="w-10 h-10 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-mouse text-cyan-400"></i>
+                        </div>
+                        <h4 class="font-bold text-white">Mode Mouse & Laptop</h4>
+                        <p class="text-xs text-slate-300">
+                            Klik dan tahan kartu pilihanmu, geser mouse ke dalam kotak jawaban yang sesuai, lalu lepaskan klik (Drag and Drop).
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900/80 p-4 rounded-xl border border-amber-500/30 flex items-start gap-3">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-400 text-lg mt-0.5"></i>
+                    <p class="text-xs text-slate-200">
+                        <strong>Ketentuan Skor:</strong> Menempatkan kartu dengan benar memberikan +15 Skor. Jika salah, kartu akan kembali ke asal dan ada pengurangan -5 skor.
+                    </p>
+                </div>
+
+                <div class="text-right">
+                    <button onclick="closeModal('modal-petunjuk')" class="btn-touch px-6 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold">
+                        Siap Bermain!
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= MODAL 3: MATERI PEMBELAJARAN ================= -->
+        <div id="modal-materi" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="glass-panel max-w-4xl w-full rounded-2xl p-6 border border-cyan-500/30 max-h-[90vh] overflow-y-auto space-y-6">
+                <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                    <h3 class="text-2xl font-bold text-white flex items-center gap-3">
+                        <i class="fa-solid fa-book-open text-emerald-400"></i> Rangkuman Materi GLB & GLBB
+                    </h3>
+                    <button onclick="closeModal('modal-materi')" class="text-slate-400 hover:text-white text-xl p-2">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    <!-- Kolom GLB -->
+                    <div class="bg-slate-900/90 rounded-2xl p-5 border border-cyan-500/30 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-xl font-bold text-cyan-400">1. GLB (Gerak Lurus Beraturan)</h4>
+                            <span class="text-xs px-2.5 py-1 rounded bg-cyan-500/20 text-cyan-300 font-mono">a = 0</span>
+                        </div>
+                        <p class="text-xs text-slate-300">
+                            Gerak benda pada lintasan lurus dengan <strong>kecepatan konstan (tetap)</strong>. Karena kecepatan tidak berubah, nilai percepatannya adalah <strong>nol</strong>.
+                        </p>
+
+                        <div class="bg-slate-800/80 p-3 rounded-xl font-mono text-center text-cyan-300 font-bold">
+                            s = v × t
+                        </div>
+
+                        <div class="space-y-2">
+                            <h5 class="font-bold text-xs uppercase tracking-wider text-slate-400">Karakteristik & Grafik:</h5>
+                            <ul class="text-xs text-slate-300 space-y-1 list-disc list-inside">
+                                <li>Grafik $v-t$: Garis lurus horizontal mendatar.</li>
+                                <li>Grafik $s-t$: Garis miring lurus berbanding lurus waktu.</li>
+                                <li>Pola Ticker Timer: Jarak antar titik <strong>selalu sama/konstan</strong>.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Kolom GLBB -->
+                    <div class="bg-slate-900/90 rounded-2xl p-5 border border-purple-500/30 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-xl font-bold text-purple-400">2. GLBB (Gerak Lurus Berubah Beraturan)</h4>
+                            <span class="text-xs px-2.5 py-1 rounded bg-purple-500/20 text-purple-300 font-mono">a = konstan ≠ 0</span>
+                        </div>
+                        <p class="text-xs text-slate-300">
+                            Gerak benda pada lintasan lurus yang kecepatannya <strong>berubah secara teratur</strong> tiap detik. Benda mengalami <strong>percepatan tetap</strong>.
+                        </p>
+
+                        <div class="bg-slate-800/80 p-3 rounded-xl font-mono text-xs text-purple-300 font-bold space-y-1">
+                            <div>v<sub>t</sub> = v<sub>0</sub> ± a · t</div>
+                            <div>s = v<sub>0</sub> · t ± ½ a · t<sup>2</sup></div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <h5 class="font-bold text-xs uppercase tracking-wider text-slate-400">Karakteristik & Grafik:</h5>
+                            <ul class="text-xs text-slate-300 space-y-1 list-disc list-inside">
+                                <li>Grafik $v-t$: Garis miring naik (dipercepat) atau turun (diperlambat).</li>
+                                <li>Pola Ticker Timer Dipercepat: Jarak titik <strong>makin merenggang</strong>.</li>
+                                <li>Pola Ticker Timer Diperlambat: Jarak titik <strong>makin merapat</strong>.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-right">
+                    <button onclick="closeModal('modal-materi')" class="btn-touch px-6 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold">
+                        Tutup & Pelajari Lagi
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= MODAL 4: INFO PENGEMBANG ================= -->
+        <div id="modal-pengembang" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="glass-panel max-w-lg w-full rounded-2xl p-6 border border-cyan-500/30 space-y-6">
+                <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                    <h3 class="text-2xl font-bold text-white flex items-center gap-3">
+                        <i class="fa-solid fa-id-card text-cyan-400"></i> Info Pengembang
+                    </h3>
+                    <button onclick="closeModal('modal-pengembang')" class="text-slate-400 hover:text-white text-xl p-2">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="flex flex-col items-center text-center space-y-3">
+                    <div class="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-600 flex items-center justify-center text-4xl text-white shadow-xl">
+                        <i class="fa-solid fa-chalkboard-user"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-2xl font-black text-white">Sriwahyuni</h4>
+                        <p class="text-cyan-400 font-semibold text-sm">Guru Fisika & Instructional Designer</p>
+                        <p class="text-slate-300 text-xs mt-1">SMAN 1 Pinrang - Sulawesi Selatan</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900/80 rounded-xl p-4 border border-slate-700 text-xs text-slate-300 space-y-2">
+                    <p>
+                        <strong>Catatan Pengembang:</strong> Media pembelajaran interaktif berbasis game kinestetik ini dirancang khusus untuk memfasilitasi pembelajaran Fisika interaktif di kelas menggunakan Papan Digital Interaktif (Smartboard), PC, maupun Smartphone siswa.
+                    </p>
+                </div>
+
+                <div class="text-center">
+                    <button onclick="closeModal('modal-pengembang')" class="btn-touch px-6 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
+    <script>
+        /* -------------------------------------------------------------
+           1. AUDIO SYNTHESIZER (Web Audio API - No External Files)
+        ------------------------------------------------------------- */
+        let audioCtx = null;
+        let isAudioMuted = false;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            if (isAudioMuted) return;
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'correct') {
+                    // Success chord (C5 - E5 - G5)
+                    const freqs = [523.25, 659.25, 783.99];
+                    freqs.forEach((f, idx) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.type = 'triangle';
+                        o.frequency.setValueAtTime(f, now + idx * 0.08);
+                        g.connect(audioCtx.destination);
+                        o.connect(g);
+                        g.gain.setValueAtTime(0.2, now + idx * 0.08);
+                        g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.25);
+                        o.start(now + idx * 0.08);
+                        o.stop(now + idx * 0.08 + 0.25);
+                    });
+                } else if (type === 'error') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.linearRampToValueAtTime(110, now + 0.25);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'star') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(880, now);
+                    osc.frequency.exponentialRampToValueAtTime(1760, now + 0.15);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'victory') {
+                    // Fanfare melody
+                    const notes = [523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((f, i) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.type = 'square';
+                        o.frequency.setValueAtTime(f, now + i * 0.12);
+                        g.connect(audioCtx.destination);
+                        o.connect(g);
+                        g.gain.setValueAtTime(0.15, now + i * 0.12);
+                        g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.35);
+                        o.start(now + i * 0.12);
+                        o.stop(now + i * 0.12 + 0.35);
+                    });
+                }
+            } catch (e) {
+                console.log("Audio not supported or blocked", e);
+            }
+        }
+
+        function toggleAudio() {
+            isAudioMuted = !isAudioMuted;
+            const icon = document.getElementById('icon-audio');
+            const text = document.getElementById('text-audio');
+            if (isAudioMuted) {
+                icon.className = 'fa-solid fa-volume-xmark text-rose-400';
+                text.innerText = 'Suara: OFF';
+            } else {
+                icon.className = 'fa-solid fa-volume-high text-cyan-400';
+                text.innerText = 'Suara: ON';
+                playSound('click');
+            }
+        }
+
+        /* -------------------------------------------------------------
+           2. STATE PERMAINAN & PLAYER DATA
+        ------------------------------------------------------------- */
+        let playerData = {
+            name: '',
+            classInfo: ''
+        };
+
+        let gameState = {
+            score: 0,
+            currentRound: 0,
+            totalRounds: 7,
+            matchedCount: 0,
+            totalItemsInRound: 0,
+            selectedCardId: null // Digunakan untuk Tap-to-select fallback pada Layar Sentuh
+        };
+
+        /* -------------------------------------------------------------
+           3. DATA RONDE TANTANGAN DRAG & DROP
+        ------------------------------------------------------------- */
+        const roundsData = [
+            // Ronde 1: Pemilahan Karakteristik Konsep
+            {
+                title: "Ronde 1: Klasifikasi Konsep GLB vs GLBB",
+                instruction: "Geser setiap pernyataan ke dalam wadah konseptual GLB atau GLBB yang tepat!",
+                dropzones: [
+                    { id: "glb", title: "GLB (Kecepatan Konstan)", bg: "border-cyan-500/50 bg-cyan-950/20" },
+                    { id: "glbb", title: "GLBB (Percepatan Konstan)", bg: "border-purple-500/50 bg-purple-950/20" }
+                ],
+                cards: [
+                    { id: "c1", text: "Percepatan bernilai Nol (a = 0)", target: "glb" },
+                    { id: "c2", text: "Percepatan bernilai Tetap (a ≠ 0)", target: "glbb" },
+                    { id: "c3", text: "Kecepatan berubah secara teratur", target: "glbb" },
+                    { id: "c4", text: "Menempuh jarak sama dalam waktu sama", target: "glb" },
+                    { id: "c5", text: "Grafik v-t berbentuk garis mendatar lurus", target: "glb" },
+                    { id: "c6", text: "Grafik v-t berbentuk garis miring naik/turun", target: "glbb" }
+                ]
+            },
+            // Ronde 2: Detektif Ticker Timer
+            {
+                title: "Ronde 2: Analisis Pola Detektif Ticker Timer",
+                instruction: "Jodohkan deskripsi pola titik ketikan pita Ticker Timer ke jenis gerakannya!",
+                dropzones: [
+                    { id: "glb", title: "GLB (Kecepatan Tetap)", bg: "border-cyan-500/50 bg-cyan-950/20" },
+                    { id: "glbb_acc", title: "GLBB Dipercepat", bg: "border-emerald-500/50 bg-emerald-950/20" },
+                    { id: "glbb_dec", title: "GLBB Diperlambat", bg: "border-rose-500/50 bg-rose-950/20" }
+                ],
+                cards: [
+                    { id: "c21", text: "• • • • • • (Jarak antar titik selalu SAMA & STABIL)", target: "glb" },
+                    { id: "c22", text: "•  •   •    •     • (Jarak titik makin MAKIN RENGGANG)", target: "glbb_acc" },
+                    { id: "c23", text: "•     •    •   •  • (Jarak titik makin MAKIN RAPAT)", target: "glbb_dec" },
+                    { id: "c24", text: "Mobil bergerak dengan Cruise Control di jalan tol lurus", target: "glb" },
+                    { id: "c25", text: "Buah kelapa bebas jatuh dari pohonnya", target: "glbb_acc" },
+                    { id: "c26", text: "Sepeda dierem perlahan sebelum titik lampu merah", target: "glbb_dec" }
+                ]
+            },
+            // Ronde 3: Labirin Grafik Kinematika
+            {
+                title: "Ronde 3: Pencocokan Grafik Kinematika",
+                instruction: "Analisis bentuk hubungan grafik kinematika dan tarik ke wadah yang sesuai!",
+                dropzones: [
+                    { id: "glb_graph", title: "Grafik Sifat GLB", bg: "border-cyan-500/50 bg-cyan-950/20" },
+                    { id: "glbb_graph", title: "Grafik Sifat GLBB", bg: "border-purple-500/50 bg-purple-950/20" }
+                ],
+                cards: [
+                    { id: "c31", text: "Grafik (v-t): Garis sejajar sumbu t (v konstan)", target: "glb_graph" },
+                    { id: "c32", text: "Grafik (v-t): Garis miring naik linier positif", target: "glbb_graph" },
+                    { id: "c33", text: "Grafik (s-t): Garis miring lurus lurus miring", target: "glb_graph" },
+                    { id: "c34", text: "Grafik (s-t): Parabola lengkung terbuka ke atas", target: "glbb_graph" },
+                    { id: "c35", text: "Grafik (a-t): Berada tepat pada garis a = 0", target: "glb_graph" },
+                    { id: "c36", text: "Grafik (a-t): Garis mendatar pada nilai percepatan a > 0", target: "glbb_graph" }
+                ]
+            },
+            // Ronde 4: Konstruktor Formula Fisika
+            {
+                title: "Ronde 4: Menyusun Persamaan Fisika (Formula Builder)",
+                instruction: "Pasangkan rumus kinematika berikut dengan wadah kategorinya!",
+                dropzones: [
+                    { id: "formula_glb", title: "Wadah Formula GLB", bg: "border-cyan-500/50 bg-cyan-950/20" },
+                    { id: "formula_glbb", title: "Wadah Formula GLBB", bg: "border-purple-500/50 bg-purple-950/20" }
+                ],
+                cards: [
+                    { id: "c41", text: "s = v × t", target: "formula_glb" },
+                    { id: "c42", text: "v_t = v_0 + a × t", target: "formula_glbb" },
+                    { id: "c43", text: "s = v_0 × t + ½ a × t²", target: "formula_glbb" },
+                    { id: "c44", text: "v_t² = v_0² + 2 × a × s", target: "formula_glbb" },
+                    { id: "c45", text: "v = s / t", target: "formula_glb" }
+                ]
+            },
+            // Ronde 5: Studi Kasus Kontekstual Dunia Nyata
+            {
+                title: "Ronde 5: Detektif Fenomena Kontekstual",
+                instruction: "Kelompokkan fenomena dalam kehidupan nyata ini ke dalam jenis gerakannya!",
+                dropzones: [
+                    { id: "real_glb", title: "GLB (Kecepatan Konstan)", bg: "border-cyan-500/50 bg-cyan-950/20" },
+                    { id: "real_acc", title: "GLBB Dipercepat", bg: "border-emerald-500/50 bg-emerald-950/20" },
+                    { id: "real_dec", title: "GLBB Diperlambat", bg: "border-rose-500/50 bg-rose-950/20" }
+                ],
+                cards: [
+                    { id: "c51", text: "Eskalator yang meluncur stabil membawa penumpang", target: "real_glb" },
+                    { id: "c52", text: "Kelereng menggelinding turun di bidang miring licin", target: "real_acc" },
+                    { id: "c53", text: "Bola yang dilempar vertikal lurus ke atas (saat naik)", target: "real_dec" },
+                    { id: "c54", text: "Pesawat yang sedang menguji kecepatan jelajah stabil di udara", target: "real_glb" },
+                    { id: "c55", text: "Mobil di-gas secara mendadak saat lampu hijau menyala", target: "real_acc" },
+                    { id: "c56", text: "Parasut dibuka untuk menahan laju penerjun bebas", target: "real_dec" }
+                ]
+            },
+            // Ronde 6: Analisis Pola Tetesan Oli di Jalan Raya
+            {
+                title: "Ronde 6: Penganalisis Tetesan Oli Kendaraan",
+                instruction: "Analisis jejak tetesan oli mobil di jalan raya berikut!",
+                dropzones: [
+                    { id: "oil_glb", title: "Tetesan Jarak SAMA (GLB)", bg: "border-cyan-500/50 bg-cyan-950/20" },
+                    { id: "oil_acc", title: "Tetesan MAKIN MAJU/RENGGANG (GLBB Dipercepat)", bg: "border-emerald-500/50 bg-emerald-950/20" },
+                    { id: "oil_dec", title: "Tetesan MAKIN DEKAT/RAPAT (GLBB Diperlambat)", bg: "border-rose-500/50 bg-rose-950/20" }
+                ],
+                cards: [
+                    { id: "c61", text: "Tetesan Oli: [💧 ... 💧 ... 💧 ... 💧 ... 💧]", target: "oil_glb" },
+                    { id: "c62", text: "Tetesan Oli: [💧 . 💧 .. 💧 ... 💧 .... 💧]", target: "oil_acc" },
+                    { id: "c63", text: "Tetesan Oli: [💧 .... 💧 ... 💧 .. 💧 . 💧]", target: "oil_dec" },
+                    { id: "c64", text: "Mobil melaju konsisten tanpa menambah/mengurangi gas", target: "oil_glb" },
+                    { id: "c65", text: "Mobil lepas rem dan meluncur di turunan tajam", target: "oil_acc" }
+                ]
+            },
+            // Ronde 7: Evaluasi Grafik Gerak Multi-Fase
+            {
+                title: "Ronde 7: Evaluasi Segmen Grafik Kecepatan (v-t)",
+                instruction: "Tentukan jenis gerakan pada masing-masing fase grafik v-t berikut!",
+                dropzones: [
+                    { id: "fase_a", title: "Fase A: Garis Miring Naik (0 hingga 5s)", bg: "border-emerald-500/50 bg-emerald-950/20" },
+                    { id: "fase_b", title: "Fase B: Garis Lurus Mendatar (5 hingga 10s)", bg: "border-cyan-500/50 bg-cyan-950/20" },
+                    { id: "fase_c", title: "Fase C: Garis Miring Turun (10 hingga 15s)", bg: "border-rose-500/50 bg-rose-950/20" }
+                ],
+                cards: [
+                    { id: "c71", text: "Mengalami percepatan konstan a > 0 (GLBB Dipercepat)", target: "fase_a" },
+                    { id: "c72", text: "Kecepatan v konstan 20 m/s & a = 0 (GLB)", target: "fase_b" },
+                    { id: "c73", text: "Kecepatan berkurang hingga berhenti / v=0 (GLBB Diperlambat)", target: "fase_c" },
+                    { id: "c74", text: "Jarak dihitung dari Luas Segitiga Awal", target: "fase_a" },
+                    { id: "c75", text: "Jarak dihitung dari Luas Persegi Panjang", target: "fase_b" }
+                ]
+            }
+        ];
+
+        /* -------------------------------------------------------------
+           4. ALUR SISTEM LOGIN & NAVIGASI
+        ------------------------------------------------------------- */
+        function submitLogin() {
+            const nameInput = document.getElementById('input-student-name').value.trim();
+            const classInput = document.getElementById('input-student-class').value.trim();
+
+            if (!nameInput) {
+                alert("Silakan masukkan Nama Lengkap Siswa terlebih dahulu!");
+                return;
+            }
+
+            playerData.name = nameInput;
+            playerData.classInfo = classInput || "Kelas X / Fase E";
+
+            document.getElementById('display-player-name').innerText = playerData.name;
+            document.getElementById('display-player-class').innerText = playerData.classInfo;
+            document.getElementById('hud-player-name').innerText = playerData.name;
+            document.getElementById('res-player-name').innerText = playerData.name;
+
+            playSound('click');
+            showScreen('screen-menu');
+        }
+
+        function logout() {
+            playSound('click');
+            document.getElementById('input-student-name').value = '';
+            document.getElementById('input-student-class').value = '';
+            showScreen('screen-login');
+        }
+
+        function showScreen(screenId) {
+            const screens = ['screen-login', 'screen-menu', 'screen-game', 'screen-result'];
+            screens.forEach(id => {
+                const el = document.getElementById(id);
+                if (id === screenId) {
+                    el.classList.remove('hidden');
+                    if (id === 'screen-game' || id === 'screen-menu') {
+                        el.classList.add('flex');
+                    }
+                } else {
+                    el.classList.add('hidden');
+                    el.classList.remove('flex');
+                }
+            });
+        }
+
+        function openModal(modalId) {
+            playSound('click');
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            playSound('click');
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        /* -------------------------------------------------------------
+           5. GAMEPLAY & ENGINE DRAG AND DROP
+        ------------------------------------------------------------- */
+        function startGame() {
+            playSound('click');
+            gameState.score = 0;
+            gameState.currentRound = 0;
+            updateHUD();
+            showScreen('screen-game');
+            loadRound(0);
+        }
+
+        function confirmExitGame() {
+            playSound('click');
+            if (confirm("Apakah kamu yakin ingin keluar dari permainan dan kembali ke menu utama? Progress saat ini tidak disimpan.")) {
+                showScreen('screen-menu');
+            }
+        }
+
+        function updateHUD() {
+            document.getElementById('hud-score').innerText = gameState.score;
+            document.getElementById('hud-round-title').innerText = `Ronde ${gameState.currentRound + 1} / ${gameState.totalRounds}`;
+            
+            const progressPct = Math.round(((gameState.currentRound) / gameState.totalRounds) * 100);
+            document.getElementById('hud-progress-text').innerText = `${progressPct}% Selesai`;
+            document.getElementById('hud-progress-bar').style.width = `${Math.max(5, progressPct)}%`;
+
+            // Bintang HUD
+            const starsContainer = document.getElementById('hud-stars');
+            if (gameState.score >= 120) {
+                starsContainer.innerHTML = `<i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>`;
+            } else if (gameState.score >= 70) {
+                starsContainer.innerHTML = `<i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i>`;
+            } else {
+                starsContainer.innerHTML = `<i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i>`;
+            }
+        }
+
+        function loadRound(roundIndex) {
+            gameState.currentRound = roundIndex;
+            gameState.selectedCardId = null;
+            const round = roundsData[roundIndex];
+
+            gameState.totalItemsInRound = round.cards.length;
+            gameState.matchedCount = 0;
+
+            // Reset Next Round button
+            const nextBtn = document.getElementById('btn-next-round');
+            nextBtn.classList.add('hidden');
+            document.getElementById('feedback-text').innerText = round.instruction;
+
+            const container = document.getElementById('game-arena-content');
+            container.innerHTML = '';
+
+            // Layout Container Arena
+            const wrapper = document.createElement('div');
+            wrapper.className = 'flex flex-col h-full justify-between gap-4';
+
+            // Top Header Title Ronde
+            const titleBox = document.createElement('div');
+            titleBox.className = 'text-center py-1';
+            titleBox.innerHTML = `<h3 class="text-xl sm:text-2xl font-black text-cyan-300">${round.title}</h3>`;
+            wrapper.appendChild(titleBox);
+
+            // Center: Area Dropzones
+            const dropzoneGrid = document.createElement('div');
+            dropzoneGrid.className = `grid grid-cols-1 md:grid-cols-${round.dropzones.length} gap-4 flex-1 items-stretch`;
+
+            round.dropzones.forEach(dz => {
+                const zone = document.createElement('div');
+                zone.id = `dz-${dz.id}`;
+                zone.className = `drop-zone border-2 border-dashed rounded-2xl p-4 flex flex-col items-center justify-start min-h-[160px] ${dz.bg} transition-all relative`;
+                zone.setAttribute('data-target-id', dz.id);
+
+                zone.innerHTML = `
+                    <div class="w-full text-center pb-2 border-b border-white/10 mb-3">
+                        <span class="font-extrabold text-white text-base sm:text-lg tracking-wide">${dz.title}</span>
+                    </div>
+                    <div class="dropped-container w-full flex flex-col gap-2 flex-1 justify-start"></div>
+                `;
+
+                // Drag Events untuk HTML5 Standard & Mouse
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('dragleave', handleDragLeave);
+                zone.addEventListener('drop', handleDrop);
+
+                // Tap Event Fallback untuk Layar Sentuh Smartboard / Mobile
+                zone.addEventListener('click', function(e) {
+                    if (gameState.selectedCardId) {
+                        attemptMatch(gameState.selectedCardId, dz.id);
+                    }
+                });
+
+                dropzoneGrid.appendChild(zone);
+            });
+
+            wrapper.appendChild(dropzoneGrid);
+
+            // Bottom: Cards Pool (Kartu-kartu Pilihan)
+            const cardsPoolContainer = document.createElement('div');
+            cardsPoolContainer.className = 'bg-slate-900/60 p-4 rounded-2xl border border-white/10 mt-2';
+            
+            const cardsGrid = document.createElement('div');
+            cardsGrid.id = 'cards-pool';
+            cardsGrid.className = 'flex flex-wrap items-center justify-center gap-3 min-h-[90px]';
+
+            // Acak urutan kartu (Shuffle)
+            const shuffledCards = [...round.cards].sort(() => Math.random() - 0.5);
+
+            shuffledCards.forEach(card => {
+                const cardEl = document.createElement('div');
+                cardEl.id = `card-${card.id}`;
+                cardEl.className = 'draggable-item btn-touch bg-slate-800 hover:bg-slate-700 border-2 border-cyan-400/40 rounded-xl px-4 py-3 text-sm sm:text-base font-bold text-white shadow-lg flex items-center gap-2 cursor-grab';
+                cardEl.setAttribute('draggable', 'true');
+                cardEl.setAttribute('data-card-id', card.id);
+                cardEl.setAttribute('data-correct-target', card.target);
+                
+                cardEl.innerHTML = `
+                    <i class="fa-solid fa-grip-vertical text-cyan-400/60 text-xs"></i>
+                    <span>${card.text}</span>
+                `;
+
+                // HTML5 Drag handlers
+                cardEl.addEventListener('dragstart', handleDragStart);
+                cardEl.addEventListener('dragend', handleDragEnd);
+
+                // Tap handler untuk Layar Sentuh Interaktif
+                cardEl.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    selectCardForTap(card.id);
+                });
+
+                cardsGrid.appendChild(cardEl);
+            });
+
+            cardsPoolContainer.appendChild(cardsGrid);
+            wrapper.appendChild(cardsPoolContainer);
+
+            container.appendChild(wrapper);
+            updateHUD();
+        }
+
+        /* Handler Event HTML Drag and Drop */
+        let draggedCardId = null;
+
+        function handleDragStart(e) {
+            draggedCardId = this.getAttribute('data-card-id');
+            e.dataTransfer.setData('text/plain', draggedCardId);
+            this.classList.add('opacity-50');
+            playSound('click');
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('opacity-50');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            this.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            const cardId = e.dataTransfer.getData('text/plain') || draggedCardId;
+            const targetZoneId = this.getAttribute('data-target-id');
+            if (cardId && targetZoneId) {
+                attemptMatch(cardId, targetZoneId);
+            }
+        }
+
+        /* Handler Event Tap-to-Select untuk Smartboard Layar Sentuh */
+        function selectCardForTap(cardId) {
+            playSound('click');
+            // Unselect kartu sebelumnya jika ada
+            if (gameState.selectedCardId) {
+                const prevCard = document.getElementById(`card-${gameState.selectedCardId}`);
+                if (prevCard) prevCard.classList.remove('selected-tap');
+            }
+
+            if (gameState.selectedCardId === cardId) {
+                // Deselect jika diketuk ulang
+                gameState.selectedCardId = null;
+                document.getElementById('feedback-text').innerText = "Kartu batal dipilih.";
+            } else {
+                gameState.selectedCardId = cardId;
+                const cardEl = document.getElementById(`card-${cardId}`);
+                if (cardEl) cardEl.classList.add('selected-tap');
+                document.getElementById('feedback-text').innerText = "Kartu dipilih! Sekarang ketuk wadah tujuan yang sesuai di atas.";
+            }
+        }
+
+        /* Evaluasi Percobaan Pencocokan */
+        function attemptMatch(cardId, zoneTargetId) {
+            const cardEl = document.getElementById(`card-${cardId}`);
+            if (!cardEl) return;
+
+            const correctTarget = cardEl.getAttribute('data-correct-target');
+
+            if (correctTarget === zoneTargetId) {
+                // JAWABAN BENAR!
+                playSound('correct');
+                gameState.score += 15;
+                gameState.matchedCount++;
+
+                // Pindahkan kartu ke dalam dropzone
+                const dropzone = document.getElementById(`dz-${zoneTargetId}`);
+                const container = dropzone.querySelector('.dropped-container');
+                
+                // Styling kartu saat berhasil ditempatkan
+                cardEl.classList.remove('draggable-item', 'selected-tap', 'hover:bg-slate-700');
+                cardEl.classList.add('bg-emerald-600/30', 'border-emerald-400', 'text-emerald-200', 'pop-animation', 'py-2');
+                cardEl.removeAttribute('draggable');
+                cardEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> <span>${cardEl.innerText}</span>`;
+
+                container.appendChild(cardEl);
+                gameState.selectedCardId = null;
+
+                document.getElementById('feedback-text').innerText = "Tepat Sekali! Pasangan jawabanmu benar (+15 Skor)";
+
+                // Cek apakah ronde ini telah selesai
+                if (gameState.matchedCount >= gameState.totalItemsInRound) {
+                    playSound('star');
+                    document.getElementById('feedback-text').innerText = "Hebat! Semua tantangan di ronde ini telah terselesaikan dengan sempurna!";
+                    document.getElementById('btn-next-round').classList.remove('hidden');
+                }
+            } else {
+                // JAWABAN SALAH!
+                playSound('error');
+                gameState.score = Math.max(0, gameState.score - 5);
+
+                // Animasi Shake kartu
+                cardEl.classList.add('shake-animation');
+                setTimeout(() => {
+                    cardEl.classList.remove('shake-animation');
+                }, 400);
+
+                document.getElementById('feedback-text').innerText = "Kurang Tepat! Kartu kembali ke posisi awal (-5 Skor). Pelajari kembali sifat gerakannya.";
+            }
+
+            updateHUD();
+        }
+
+        function nextRound() {
+            playSound('click');
+            if (gameState.currentRound + 1 < gameState.totalRounds) {
+                loadRound(gameState.currentRound + 1);
+            } else {
+                // Selesai Seluruh Game
+                showFinalResults();
+            }
+        }
+
+        /* -------------------------------------------------------------
+           6. HALAMAN HASIL & EVALUASI AKHIR
+        ------------------------------------------------------------- */
+        function showFinalResults() {
+            playSound('victory');
+            showScreen('screen-result');
+
+            document.getElementById('res-final-score').innerText = gameState.score;
+
+            const starsDisplay = document.getElementById('res-stars-display');
+            const badgeTitle = document.getElementById('res-badge-title');
+            const evalText = document.getElementById('res-evaluation-text');
+
+            if (gameState.score >= 120) {
+                starsDisplay.innerHTML = `<i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>`;
+                badgeTitle.innerText = "Master Fisika GLB & GLBB";
+                badgeTitle.className = "text-lg font-bold text-emerald-400 mt-1";
+                evalText.innerText = `"Luar Biasa! Pemahaman kinestetik dan daya analisis gerak dua dimensi & satu dimensimu sangat sempurna!"`;
+            } else if (gameState.score >= 70) {
+                starsDisplay.innerHTML = `<i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i>`;
+                badgeTitle.innerText = "Ahli Kinematika Muda";
+                badgeTitle.className = "text-lg font-bold text-cyan-400 mt-1";
+                evalText.innerText = `"Bagus Sekali! Kamu sudah menguasai sebagian besar perbedaan GLB dan GLBB dengan baik."`;
+            } else {
+                starsDisplay.innerHTML = `<i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i><i class="fa-regular fa-star"></i>`;
+                badgeTitle.innerText = "Fisikawan Pembelajar";
+                badgeTitle.className = "text-lg font-bold text-amber-400 mt-1";
+                evalText.innerText = `"Tetap Semangat! Baca kembali rangkuman materi di menu utama dan coba selesaikan tantangan sekali lagi."`;
+            }
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        function goToMenu() {
+            playSound('click');
+            showScreen('screen-menu');
+        }
+
+        // Inisialisasi awal saat window dimuat
+        window.onload = function() {
+            // Screen default awal adalah login
+            showScreen('screen-login');
+        }
+    </script>
+</body>
+</html>
